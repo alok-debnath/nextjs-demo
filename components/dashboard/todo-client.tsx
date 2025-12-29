@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Trash2, Plus, CheckCircle2, Circle } from 'lucide-react'
-import { addTodo, updateTodoStatus, deleteTodo } from '@/lib/actions/todos'
 
 interface Todo {
   id: string
@@ -32,7 +31,23 @@ export default function TodoClient({ initialTodos }: TodoClientProps) {
     if (!newTodoTitle.trim()) return
 
     try {
-      const newTodo = await addTodo(newTodoTitle, newTodoDescription)
+      const response = await fetch('/api/todos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: newTodoTitle.trim(),
+          description: newTodoDescription?.trim() || null,
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to add todo')
+      }
+
+      const newTodo = await response.json()
       setTodos([newTodo, ...todos])
       setNewTodoTitle('')
       setNewTodoDescription('')
@@ -48,9 +63,22 @@ export default function TodoClient({ initialTodos }: TodoClientProps) {
     const newStatus = todo.status === 'pending' ? 'completed' : 'pending'
 
     try {
-      await updateTodoStatus(id, newStatus)
+      const response = await fetch(`/api/todos/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to update todo')
+      }
+
+      const updatedTodo = await response.json()
       setTodos(todos.map(t =>
-        t.id === id ? { ...t, status: newStatus } : t
+        t.id === id ? updatedTodo : t
       ))
     } catch (error) {
       console.error('Error updating todo:', error)
@@ -59,7 +87,15 @@ export default function TodoClient({ initialTodos }: TodoClientProps) {
 
   const deleteTodoHandler = async (id: string) => {
     try {
-      await deleteTodo(id)
+      const response = await fetch(`/api/todos/${id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to delete todo')
+      }
+
       setTodos(todos.filter(todo => todo.id !== id))
     } catch (error) {
       console.error('Error deleting todo:', error)

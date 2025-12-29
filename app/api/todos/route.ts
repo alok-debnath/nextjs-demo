@@ -7,7 +7,14 @@ export async function GET() {
   try {
     const todosList = await db.select().from(todos).orderBy(desc(todos.createdAt))
     
-    return NextResponse.json(todosList)
+    // Return serialized data for client component
+    const serializedTodos = todosList.map(todo => ({
+      ...todo,
+      createdAt: todo.createdAt.toISOString(),
+      updatedAt: todo.updatedAt.toISOString()
+    }))
+    
+    return NextResponse.json(serializedTodos)
   } catch (error) {
     console.error('Error fetching todos:', error)
     return NextResponse.json(
@@ -28,13 +35,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const todo = await db.insert(todos).values({
+    const [todo] = await db.insert(todos).values({
       title: title.trim(),
       description: description?.trim() || null,
       status: 'pending'
     }).returning()
 
-    return NextResponse.json(todo, { status: 201 })
+    // Return serialized data for client component
+    const serializedTodo = {
+      ...todo,
+      createdAt: todo.createdAt.toISOString(),
+      updatedAt: todo.updatedAt.toISOString()
+    }
+
+    return NextResponse.json(serializedTodo, { status: 201 })
   } catch (error) {
     console.error('Error creating todo:', error)
     return NextResponse.json(

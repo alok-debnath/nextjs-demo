@@ -18,12 +18,19 @@ export async function PUT(
       )
     }
 
-    const todo = await db.update(todos)
+    const [todo] = await db.update(todos)
       .set({ status })
       .where(eq(todos.id, id))
       .returning()
 
-    return NextResponse.json(todo)
+    // Return serialized data for client component
+    const serializedTodo = {
+      ...todo,
+      createdAt: todo.createdAt.toISOString(),
+      updatedAt: todo.updatedAt.toISOString()
+    }
+
+    return NextResponse.json(serializedTodo)
   } catch (error) {
     console.error('Error updating todo:', error)
     return NextResponse.json(

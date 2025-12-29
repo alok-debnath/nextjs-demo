@@ -1,9 +1,16 @@
-import { getTodos } from '@/lib/actions/todos'
 import TodoClient from '@/components/dashboard/todo-client'
 
 export default async function Dashboard() {
-  // Server-side data fetching - this runs on the server
-  const todos = await getTodos()
+  // Fetch initial data from API instead of Server Actions
+  const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/todos`, {
+    cache: 'no-store', // Ensure fresh data
+  })
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch todos')
+  }
+  
+  const todos = await response.json()
 
   return (
     <div className="container mx-auto p-6 space-y-6">
