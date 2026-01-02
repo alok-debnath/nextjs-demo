@@ -33,6 +33,8 @@ export default function TodoClient({ initialTodos }: TodoClientProps) {
 
     try {
       const newTodo = await addTodo(newTodoTitle, newTodoDescription)
+      console.log("newTodo: ", newTodo);
+      
       setTodos([newTodo, ...todos])
       setNewTodoTitle('')
       setNewTodoDescription('')
